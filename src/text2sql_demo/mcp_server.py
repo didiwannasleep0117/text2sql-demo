@@ -79,6 +79,40 @@ def ask_metrics(question: str) -> str:
                       ensure_ascii=False, default=str)
 
 
+# ---------- 一般 HTTP 端點（給 n8n 的 HTTP Request 節點用，不必走 MCP） ----------
+_SESSIONS: dict[str, list[dict]] = {}  # sessionId → 最近一題（追問用）
+
+
+def to_markdown(r: dict, max_rows: int = 15) -> str:
+    """把 ask() 的結果排成聊天視窗看得懂的 Markdown：摘要 → 表格 → SQL。"""
+    out = [r.get("answer") or ""]
+    cols, rows = r.get("columns") or [], r.get("rows") or []
+    if rows:
+        fmt = lambda v: f"{v:,.4f}".rstrip("0").rstrip(".") if isinstance(v, float) else (  # noqa: E731
+            f"{v:,}" if isinstance(v, int) else str(v))
+        out.append("| " + " | ".join(cols) + " |\n|" + "---|" * len(cols))
+        out[-1] += "".join("\n| " + " | ".join(fmt(v) for v in row) + " |" for row in rows[:max_rows])
+        if len(rows) > max_rows:
+            out.append(f"（共 {len(rows)} 列，只列前 {max_rows} 列）")
+    if r.get("sql"):
+        out.append(f"```sql\n{r['sql']}\n```")
+    return "\n\n".join(out)
+
+
+@mcp.custom_route("/ask", methods=["POST"])
+async def http_ask(request):
+    import anyio
+    from starlette.responses import JSONResponse
+    body = await request.json()
+    q, sid = str(body.get("question", "")).strip(), str(body.get("sessionId", ""))
+    hist = _SESSIONS.get(sid) if sid else None
+    r = await anyio.to_thread.run_sync(lambda: ask(q, history=hist))
+    if sid and r.get("sql"):
+        _SESSIONS[sid] = [{"question": q, "sql": r["sql"]}]
+    r["markdown"] = to_markdown(r)
+    return JSONResponse({k: r.get(k) for k in ("markdown", "answer", "action", "sql", "columns", "rows", "seconds")})
+
+
 def main() -> None:
     mcp.run(transport="streamable-http")
 
