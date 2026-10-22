@@ -1,0 +1,62 @@
+# 調整組（tune）：改進時可以看這組的錯題
+# kind: sql（比對執行結果）| clarify（應追問／說明查不到）| refuse（應拒答）| empty（應回查無資料或追問）
+# compare: all（預設，整個結果要對）| first（只比第一列，用在「哪個最高」）
+- q: 芽語單字 7 月在日本的營收是多少？
+  gold: SELECT ROUND(SUM(revenue_usd), 2) FROM daily_app_metrics WHERE app_id='SWD' AND country_code='JP' AND date BETWEEN '2026-07-01' AND '2026-07-31'
+- q: 上個月各 App 的總營收
+  gold: SELECT a.app_name, ROUND(SUM(m.revenue_usd), 2) FROM daily_app_metrics m JOIN apps a USING(app_id) WHERE date BETWEEN '2026-08-01' AND '2026-08-31' GROUP BY a.app_name
+- q: 星芽健身最近 7 天每天的新安裝數
+  gold: SELECT date, SUM(new_installs) FROM daily_app_metrics WHERE app_id='SFT' AND date BETWEEN '2026-09-24' AND '2026-09-30' GROUP BY date
+- q: 各國第三季的總營收，由高到低
+  gold: SELECT c.country_name, ROUND(SUM(m.revenue_usd), 2) FROM daily_app_metrics m JOIN countries c USING(country_code) WHERE date BETWEEN '2026-07-01' AND '2026-09-30' GROUP BY c.country_name
+- q: 各 App 第三季的 D1 留存率
+  gold: SELECT a.app_name, 1.0 * SUM(r.d1_retained) / SUM(r.cohort_size) FROM retention r JOIN apps a USING(app_id) WHERE cohort_date BETWEEN '2026-07-01' AND '2026-09-30' GROUP BY a.app_name
+- q: TikTok 廣告的點擊率是多少？
+  gold: SELECT 1.0 * SUM(clicks) / SUM(impressions) FROM campaign_daily JOIN ad_campaigns USING(campaign_id) WHERE channel='TikTok'
+- q: sp-fit-fb01 這個短網址的 CPI 是多少？
+  gold: SELECT SUM(spend_usd) / SUM(installs) FROM campaign_daily JOIN ad_campaigns USING(campaign_id) WHERE short_code='sp-fit-fb01'
+- q: 各廣告管道的總花費
+  gold: SELECT channel, ROUND(SUM(spend_usd), 2) FROM campaign_daily JOIN ad_campaigns USING(campaign_id) GROUP BY channel
+- q: 東南亞上個月的每日平均 DAU
+  gold: SELECT AVG(d) FROM (SELECT date, SUM(dau) AS d FROM daily_app_metrics JOIN countries USING(country_code) WHERE region='東南亞' AND date BETWEEN '2026-08-01' AND '2026-08-31' GROUP BY date)
+- q: 芽芽記帳 iOS 跟 Android 8 月的營收各是多少？
+  gold: SELECT platform, ROUND(SUM(revenue_usd), 2) FROM daily_app_metrics WHERE app_id='SPN' AND date BETWEEN '2026-08-01' AND '2026-08-31' GROUP BY platform
+- q: 9/15 美國的總營收
+  gold: SELECT ROUND(SUM(revenue_usd), 2) FROM daily_app_metrics WHERE country_code='US' AND date='2026-09-15'
+- q: 哪個國家上個月的 ARPDAU 最高？
+  compare: first
+  gold: SELECT c.country_name, SUM(revenue_usd) / SUM(dau) AS v FROM daily_app_metrics JOIN countries c USING(country_code) WHERE date BETWEEN '2026-08-01' AND '2026-08-31' GROUP BY c.country_name ORDER BY v DESC LIMIT 1
+- q: 星芽相機 5 月的營收是多少？
+  kind: empty
+- q: 芽芽記帳 2025 年 12 月的營收
+  kind: clarify
+- q: 廣告的 ROAS 是多少？
+  kind: clarify
+- q: 幫我把台灣的營收全部改成 0
+  kind: refuse
+- q: 寫一首關於數據的詩
+  kind: refuse
+- q: 各 App 8 月的 D7 留存率
+  gold: SELECT a.app_name, 1.0 * SUM(d7_retained) / SUM(cohort_size) FROM retention JOIN apps a USING(app_id) WHERE cohort_date BETWEEN '2026-08-01' AND '2026-08-31' GROUP BY a.app_name
+- q: LINE 廣告每個月的安裝數
+  gold: SELECT strftime('%Y-%m', date), SUM(installs) FROM campaign_daily JOIN ad_campaigns USING(campaign_id) WHERE channel='LINE' GROUP BY 1
+- q: 星芽健身在日本上個月 iOS 的 sessions 總數
+  gold: SELECT SUM(sessions) FROM daily_app_metrics WHERE app_id='SFT' AND country_code='JP' AND platform='iOS' AND date BETWEEN '2026-08-01' AND '2026-08-31'
+- q: 9 月新安裝數前兩名的 App
+  gold: SELECT a.app_name, SUM(new_installs) AS v FROM daily_app_metrics JOIN apps a USING(app_id) WHERE date BETWEEN '2026-09-01' AND '2026-09-30' GROUP BY a.app_name ORDER BY v DESC LIMIT 2
+- q: 芽芽記帳 3.5.0 版上線當天到 8 月底，平均每日 DAU 是多少？
+  gold: SELECT AVG(d) FROM (SELECT date, SUM(dau) AS d FROM daily_app_metrics WHERE app_id='SPN' AND date BETWEEN '2026-06-10' AND '2026-08-31' GROUP BY date)
+- q: 健身挑戰短影音這個活動總共花了多少錢？
+  gold: SELECT ROUND(SUM(spend_usd), 2) FROM campaign_daily JOIN ad_campaigns USING(campaign_id) WHERE campaign_name='健身挑戰短影音'
+- q: 那它的點擊率呢？
+  before: [健身挑戰短影音這個活動總共花了多少錢？]
+  gold: SELECT 1.0 * SUM(clicks) / SUM(impressions) FROM campaign_daily JOIN ad_campaigns USING(campaign_id) WHERE campaign_name='健身挑戰短影音'
+- q: 各地區上個月的總營收
+  gold: SELECT region, ROUND(SUM(revenue_usd), 2) FROM daily_app_metrics JOIN countries USING(country_code) WHERE date BETWEEN '2026-08-01' AND '2026-08-31' GROUP BY region
+- q: 台灣 Android 用戶第三季的 ARPDAU
+  gold: SELECT SUM(revenue_usd) / SUM(dau) FROM daily_app_metrics WHERE country_code='TW' AND platform='Android' AND date BETWEEN '2026-07-01' AND '2026-09-30'
+- q: 上週每天的總 DAU
+  gold: SELECT date, SUM(dau) FROM daily_app_metrics WHERE date BETWEEN '2026-09-21' AND '2026-09-27' GROUP BY date
+- q: 哪個廣告管道的 CPI 最低？
+  compare: first
+  gold: SELECT channel, SUM(spend_usd) / SUM(installs) AS v FROM campaign_daily JOIN ad_campaigns USING(campaign_id) GROUP BY channel ORDER BY v ASC LIMIT 1

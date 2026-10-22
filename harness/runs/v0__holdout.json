@@ -1,0 +1,597 @@
+[
+ {
+  "q": "芽語單字 6 月在泰國的新安裝數是多少？",
+  "ok": true,
+  "why": "結果一致",
+  "seconds": 2.9,
+  "action": "sql",
+  "sql": "SELECT ROUND(SUM(new_installs), 0) AS new_installs FROM daily_app_metrics WHERE app_id = 'SWD' AND country_code = 'TH' AND date BETWEEN '2026-06-01' AND '2026-06-30'",
+  "columns": [
+   "new_installs"
+  ],
+  "rows": [
+   [
+    2078.0
+   ]
+  ],
+  "answer": "芽語單字 6 月在泰國的新安裝數為 2,078 個。",
+  "hints": [
+   "App「芽語單字」→ app_id = 'SWD'",
+   "國家「泰國」→ country_code = 'TH'",
+   "日期「6 月」→ 2026-06-01 ~ 2026-06-30"
+  ],
+  "errors": [],
+  "repairs": 0,
+  "summary_retry": false,
+  "summary_fallback": false
+ },
+ {
+  "q": "那 iOS 的呢？",
+  "ok": true,
+  "why": "結果一致",
+  "seconds": 2.8,
+  "action": "sql",
+  "sql": "SELECT ROUND(SUM(new_installs), 0) AS new_installs FROM daily_app_metrics WHERE app_id = 'SWD' AND country_code = 'TH' AND platform = 'iOS' AND date BETWEEN '2026-06-01' AND '2026-06-30'",
+  "columns": [
+   "new_installs"
+  ],
+  "rows": [
+   [
+    933.0
+   ]
+  ],
+  "answer": "iOS 的新裝機數為 933 裏。",
+  "hints": [
+   "平台「ios」→ platform = 'iOS'"
+  ],
+  "errors": [],
+  "repairs": 0,
+  "summary_retry": false,
+  "summary_fallback": false
+ },
+ {
+  "q": "各國 8 月的每日平均 DAU，由高到低",
+  "ok": true,
+  "why": "結果一致",
+  "seconds": 4.2,
+  "action": "sql",
+  "sql": "SELECT c.country_name, ROUND(AVG(t.dau), 0) AS avg_daily_dau FROM (\n  SELECT date, country_code, SUM(dau) AS dau FROM daily_app_metrics\n  WHERE date BETWEEN '2026-08-01' AND '2026-08-31' GROUP BY date, country_code) t\nJOIN countries c USING (country_code) GROUP BY c.country_name ORDER BY avg_daily_dau DESC",
+  "columns": [
+   "country_name",
+   "avg_daily_dau"
+  ],
+  "rows": [
+   [
+    "台灣",
+    10345.0
+   ],
+   [
+    "日本",
+    7273.0
+   ],
+   [
+    "美國",
+    6201.0
+   ],
+   [
+    "泰國",
+    4624.0
+   ],
+   [
+    "韓國",
+    4131.0
+   ],
+   [
+    "香港",
+    3639.0
+   ],
+   [
+    "越南",
+    3100.0
+   ],
+   [
+    "馬來西亞",
+    2589.0
+   ]
+  ],
+  "answer": "台灣每日平均 DAU 為 10,345，日本為 7,273，美國為 6,201，為各國 8 月每日平均 DAU 最高前三名。",
+  "hints": [
+   "日期「8 月」→ 2026-08-01 ~ 2026-08-31"
+  ],
+  "errors": [],
+  "repairs": 0,
+  "summary_retry": false,
+  "summary_fallback": false
+ },
+ {
+  "q": "星芽相機上架以來每個月的營收",
+  "ok": true,
+  "why": "結果一致（摘要被擋，只給表格）",
+  "seconds": 5.6,
+  "action": "sql",
+  "sql": "SELECT strftime('%Y-%m', date) AS month, ROUND(SUM(revenue_usd), 2) AS revenue_usd FROM daily_app_metrics WHERE app_id = 'SCM' AND date BETWEEN '2026-06-01' AND '2026-09-30' GROUP BY month ORDER BY month DESC",
+  "columns": [
+   "month",
+   "revenue_usd"
+  ],
+  "rows": [
+   [
+    "2026-09",
+    3246.31
+   ],
+   [
+    "2026-08",
+    3225.82
+   ],
+   [
+    "2026-07",
+    3354.92
+   ],
+   [
+    "2026-06",
+    2086.6
+   ]
+  ],
+  "answer": "查詢結果如下表。",
+  "hints": [
+   "App「星芽相機」→ app_id = 'SCM'"
+  ],
+  "errors": [],
+  "repairs": 0,
+  "summary_retry": true,
+  "summary_fallback": true
+ },
+ {
+  "q": "Facebook 廣告 9 月的 CTR",
+  "ok": false,
+  "why": "應查詢（實際 error：抱歉，這題我產生的查詢一直失敗，可以換個說法再問一次嗎？）",
+  "seconds": 5.6,
+  "action": "error",
+  "sql": "SELECT ROUND(SUM(c.clicks) / SUM(c.impressions), 4) AS ctr FROM campaign_daily c WHERE c.date BETWEEN '2026-09-01' AND '2026-09-30' AND c.channel = 'Facebook'",
+  "columns": [],
+  "rows": [],
+  "answer": "抱歉，這題我產生的查詢一直失敗，可以換個說法再問一次嗎？",
+  "hints": [
+   "廣告管道「facebook」→ ad_campaigns.channel = 'Facebook'",
+   "日期「9 月」→ 2026-09-01 ~ 2026-09-30"
+  ],
+  "errors": [
+   "no such column: channel",
+   "no such column: c.channel",
+   "no such column: c.channel"
+  ],
+  "repairs": 2,
+  "summary_retry": false,
+  "summary_fallback": false
+ },
+ {
+  "q": "sp-wd-line1 總共帶來多少安裝？",
+  "ok": true,
+  "why": "結果一致",
+  "seconds": 2.9,
+  "action": "sql",
+  "sql": "SELECT ROUND(SUM(d.installs), 0) AS total_installs FROM campaign_daily d JOIN ad_campaigns c USING (campaign_id) WHERE c.short_code = 'sp-wd-line1' AND c.channel = 'LINE'",
+  "columns": [
+   "total_installs"
+  ],
+  "rows": [
+   [
+    27554.0
+   ]
+  ],
+  "answer": "sp-wd-line1 總共帶來 27,554 個安裝。",
+  "hints": [
+   "廣告管道「line」→ ad_campaigns.channel = 'LINE'",
+   "短網址「sp-wd-line1」→ ad_campaigns.short_code = 'sp-wd-line1'（單字每日一句）"
+  ],
+  "errors": [],
+  "repairs": 0,
+  "summary_retry": false,
+  "summary_fallback": false
+ },
+ {
+  "q": "各 App 上半年的 iOS 營收",
+  "ok": true,
+  "why": "結果一致",
+  "seconds": 4.4,
+  "action": "sql",
+  "sql": "SELECT a.app_name, ROUND(SUM(d.revenue_usd), 2) AS revenue_usd FROM daily_app_metrics d JOIN apps a ON d.app_id = a.app_id WHERE d.platform = 'iOS' AND d.date BETWEEN '2026-01-01' AND '2026-06-30' GROUP BY a.app_name ORDER BY revenue_usd DESC",
+  "columns": [
+   "app_name",
+   "revenue_usd"
+  ],
+  "rows": [
+   [
+    "星芽健身",
+    28745.07
+   ],
+   [
+    "芽芽記帳",
+    27190.54
+   ],
+   [
+    "芽語單字",
+    16209.03
+   ],
+   [
+    "星芽相機",
+    1193.62
+   ]
+  ],
+  "answer": "各 App 上半年的 iOS 營收分別為：星芽健身 28,745.07 USD，芽芽記帳 27,190.54 USD，芽語單字 16,209.03 USD，星芽相機 1,193.62 USD。",
+  "hints": [
+   "平台「ios」→ platform = 'iOS'",
+   "日期「上半年」→ 2026-01-01 ~ 2026-06-30"
+  ],
+  "errors": [],
+  "repairs": 0,
+  "summary_retry": false,
+  "summary_fallback": false
+ },
+ {
+  "q": "東亞第二季的總營收",
+  "ok": true,
+  "why": "結果一致",
+  "seconds": 3.0,
+  "action": "sql",
+  "sql": "SELECT ROUND(SUM(revenue_usd), 2) AS total_revenue_usd FROM daily_app_metrics WHERE date BETWEEN '2026-04-01' AND '2026-06-30' AND country_code IN (SELECT country_code FROM countries WHERE region = '東亞')",
+  "columns": [
+   "total_revenue_usd"
+  ],
+  "rows": [
+   [
+    77330.18
+   ]
+  ],
+  "answer": "東亞第二季總營收為 77,330.18 美元。",
+  "hints": [
+   "地區「東亞」→ countries.region = '東亞'（TW, HK, JP, KR）",
+   "日期「第二季」→ 2026-04-01 ~ 2026-06-30"
+  ],
+  "errors": [],
+  "repairs": 0,
+  "summary_retry": false,
+  "summary_fallback": false
+ },
+ {
+  "q": "哪個 App 上個月的 D1 留存率最高？",
+  "ok": false,
+  "why": "數值欄 v 對不上（標準 [0.3757173829868639]…）",
+  "seconds": 3.5,
+  "action": "sql",
+  "sql": "SELECT a.app_name, ROUND(SUM(r.d1_retained) / SUM(r.cohort_size), 4) AS d1_retention_rate FROM retention r JOIN apps a ON r.app_id = a.app_id WHERE r.cohort_date BETWEEN '2026-08-01' AND '2026-08-31' GROUP BY a.app_name ORDER BY d1_retention_rate DESC LIMIT 1",
+  "columns": [
+   "app_name",
+   "d1_retention_rate"
+  ],
+  "rows": [
+   [
+    "芽語單字",
+    0.0
+   ]
+  ],
+  "answer": "上個月芽語單字的 D1 留存率為 0%。",
+  "hints": [
+   "日期「上個月」→ 2026-08-01 ~ 2026-08-31"
+  ],
+  "errors": [],
+  "repairs": 0,
+  "summary_retry": false,
+  "summary_fallback": false
+ },
+ {
+  "q": "美國 9 月每天的營收",
+  "ok": true,
+  "why": "結果一致",
+  "seconds": 3.7,
+  "action": "sql",
+  "sql": "SELECT date, ROUND(SUM(revenue_usd), 2) AS revenue_usd FROM daily_app_metrics WHERE country_code = 'US' AND date BETWEEN '2026-09-01' AND '2026-09-30' GROUP BY date ORDER BY date ASC",
+  "columns": [
+   "date",
+   "revenue_usd"
+  ],
+  "rows": [
+   [
+    "2026-09-01",
+    212.93
+   ],
+   [
+    "2026-09-02",
+    221.41
+   ],
+   [
+    "2026-09-03",
+    222.86
+   ],
+   [
+    "2026-09-04",
+    218.58
+   ],
+   [
+    "2026-09-05",
+    251.75
+   ],
+   [
+    "2026-09-06",
+    220.26
+   ],
+   [
+    "2026-09-07",
+    216.94
+   ],
+   [
+    "2026-09-08",
+    214.46
+   ],
+   [
+    "2026-09-09",
+    235.79
+   ],
+   [
+    "2026-09-10",
+    215.45
+   ],
+   [
+    "2026-09-11",
+    194.95
+   ],
+   [
+    "2026-09-12",
+    237.92
+   ],
+   [
+    "2026-09-13",
+    262.95
+   ],
+   [
+    "2026-09-14",
+    204.65
+   ],
+   [
+    "2026-09-15",
+    214.32
+   ],
+   [
+    "2026-09-16",
+    219.8
+   ],
+   [
+    "2026-09-17",
+    224.94
+   ],
+   [
+    "2026-09-18",
+    216.07
+   ],
+   [
+    "2026-09-19",
+    274.34
+   ],
+   [
+    "2026-09-20",
+    246.79
+   ],
+   [
+    "2026-09-21",
+    222.26
+   ],
+   [
+    "2026-09-22",
+    235.77
+   ],
+   [
+    "2026-09-23",
+    229.19
+   ],
+   [
+    "2026-09-24",
+    229.55
+   ],
+   [
+    "2026-09-25",
+    228.89
+   ],
+   [
+    "2026-09-26",
+    263.36
+   ],
+   [
+    "2026-09-27",
+    259.12
+   ],
+   [
+    "2026-09-28",
+    229.07
+   ],
+   [
+    "2026-09-29",
+    213.57
+   ],
+   [
+    "2026-09-30",
+    234.93
+   ]
+  ],
+  "answer": "9 月 1 日營收為 $212.93，9 月 30 日為 $234.93，9 月 19 日營收最高為 $274.34。",
+  "hints": [
+   "國家「美國」→ country_code = 'US'",
+   "日期「9 月」→ 2026-09-01 ~ 2026-09-30"
+  ],
+  "errors": [],
+  "repairs": 0,
+  "summary_retry": false,
+  "summary_fallback": false
+ },
+ {
+  "q": "各廣告活動的 CPI",
+  "ok": true,
+  "why": "結果一致",
+  "seconds": 5.1,
+  "action": "sql",
+  "sql": "SELECT c.short_code, ROUND(SUM(d.spend_usd) / SUM(d.installs), 3) AS cpi_usd FROM campaign_daily d JOIN ad_campaigns c USING (campaign_id) GROUP BY c.short_code ORDER BY cpi_usd DESC",
+  "columns": [
+   "short_code",
+   "cpi_usd"
+  ],
+  "rows": [
+   [
+    "sp-wd-gg01",
+    1.829
+   ],
+   [
+    "sp-acct-gg01",
+    1.826
+   ],
+   [
+    "sp-wd-line1",
+    1.459
+   ],
+   [
+    "sp-cam-fb01",
+    1.339
+   ],
+   [
+    "sp-fit-fb01",
+    1.323
+   ],
+   [
+    "sp-acct-fb01",
+    1.295
+   ],
+   [
+    "sp-cam-tt01",
+    0.864
+   ],
+   [
+    "sp-fit-tt01",
+    0.839
+   ]
+  ],
+  "answer": "各廣告活動的 CPI（每點成本）如下：  \n- sp-wd-gg01：$1.829  \n- sp-acct-gg01：$1.826  \n- sp-wd-line1：$1.459  \n- sp-cam-fb01：$1.339  \n- sp-fit-fb01：$1.323  \n- sp-acct-fb01：$1.295  \n- sp-cam-tt01：$0.864  \n- sp-fit-tt01：$0.839",
+  "hints": [],
+  "errors": [],
+  "repairs": 0,
+  "summary_retry": false,
+  "summary_fallback": false
+ },
+ {
+  "q": "芽芽記帳使用者的平均年齡是幾歲？",
+  "ok": true,
+  "why": "應追問或說明查不到（實際 clarify）",
+  "seconds": 1.0,
+  "action": "clarify",
+  "sql": null,
+  "columns": [],
+  "rows": [],
+  "answer": "資料庫沒有使用者年齡資料，無法計算平均年齡。",
+  "hints": [
+   "App「芽芽記帳」→ app_id = 'SPN'"
+  ],
+  "errors": [],
+  "repairs": 0,
+  "summary_retry": false,
+  "summary_fallback": false
+ },
+ {
+  "q": "2027 年 1 月的總營收",
+  "ok": true,
+  "why": "應追問或說明查不到（實際 clarify）",
+  "seconds": 1.5,
+  "action": "clarify",
+  "sql": null,
+  "columns": [],
+  "rows": [],
+  "answer": "資料期間為 2026-04-01 ~ 2026-09-30，沒有 2027 年 1 月的資料。",
+  "hints": [
+   "日期「1 月」→ 2026-01-01 ~ 2026-01-31（超出資料期間 2026-04-01 ~ 2026-09-30）"
+  ],
+  "errors": [],
+  "repairs": 0,
+  "summary_retry": false,
+  "summary_fallback": false
+ },
+ {
+  "q": "幫我刪掉廣告資料表",
+  "ok": true,
+  "why": "應拒答（實際 refuse）",
+  "seconds": 0.9,
+  "action": "refuse",
+  "sql": null,
+  "columns": [],
+  "rows": [],
+  "answer": "我不能刪除資料表，這是資料庫的結構，請勿修改。",
+  "hints": [],
+  "errors": [],
+  "repairs": 0,
+  "summary_retry": false,
+  "summary_fallback": false
+ },
+ {
+  "q": "星芽相機 4 月在台灣的 DAU",
+  "ok": true,
+  "why": "應回查無資料（實際 empty）",
+  "seconds": 2.4,
+  "action": "empty",
+  "sql": "SELECT ROUND(AVG(t.dau), 0) AS avg_daily_dau FROM (SELECT date, app_id, SUM(dau) AS dau FROM daily_app_metrics WHERE app_id = 'SCM' AND country_code = 'TW' AND date BETWEEN '2026-04-01' AND '2026-04-30' GROUP BY date, app_id) t",
+  "columns": [
+   "avg_daily_dau"
+  ],
+  "rows": [
+   [
+    null
+   ]
+  ],
+  "answer": "查無資料。可能是條件太窄（例如該 App 那段期間還沒上架、廣告沒有投放在那個國家），可以確認一下 App、國家和日期嗎？資料期間是 2026-04-01 ~ 2026-09-30。",
+  "hints": [
+   "App「星芽相機」→ app_id = 'SCM'",
+   "國家「台灣」→ country_code = 'TW'",
+   "日期「4 月」→ 2026-04-01 ~ 2026-04-30"
+  ],
+  "errors": [],
+  "repairs": 0,
+  "summary_retry": false,
+  "summary_fallback": false
+ },
+ {
+  "q": "芽語單字 5.1.0 版上線當天到 5 月底的新安裝數",
+  "ok": false,
+  "why": "數值欄 SUM(new_installs) 對不上（標準 [11716]…）",
+  "seconds": 3.0,
+  "action": "sql",
+  "sql": "SELECT SUM(new_installs) AS total_new_installs FROM daily_app_metrics WHERE app_id = 'SWD' AND date BETWEEN '2026-05-01' AND '2026-05-31'",
+  "columns": [
+   "total_new_installs"
+  ],
+  "rows": [
+   [
+    21321
+   ]
+  ],
+  "answer": "芽語單字 5.1.0 版上線當天到 5 月底的新安裝數為 21,321 個。",
+  "hints": [
+   "App「芽語單字」→ app_id = 'SWD'",
+   "版本「5.1.0」→ app_versions.version（SWD）",
+   "日期「5 月」→ 2026-05-01 ~ 2026-05-31"
+  ],
+  "errors": [],
+  "repairs": 0,
+  "summary_retry": false,
+  "summary_fallback": false
+ },
+ {
+  "q": "用中文講個笑話",
+  "ok": true,
+  "why": "應拒答（實際 refuse）",
+  "seconds": 1.2,
+  "action": "refuse",
+  "sql": null,
+  "columns": [],
+  "rows": [],
+  "answer": "我不能講笑話，但我可以幫你查 App 營運數據！",
+  "hints": [],
+  "errors": [],
+  "repairs": 0,
+  "summary_retry": false,
+  "summary_fallback": false
+ }
+]

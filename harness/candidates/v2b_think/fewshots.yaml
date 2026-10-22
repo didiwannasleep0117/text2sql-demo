@@ -1,0 +1,26 @@
+# v2b 的範例：原本 3 題＋「地區 × 每日平均」＋比率要乘 1.0
+- q: 芽芽記帳 8 月在台灣的營收是多少？
+  sql: |-
+    SELECT ROUND(SUM(revenue_usd), 2) AS revenue_usd FROM daily_app_metrics
+    WHERE app_id = 'SPN' AND country_code = 'TW' AND date BETWEEN '2026-08-01' AND '2026-08-31'
+- q: 各 App 上個月的每日平均 DAU
+  sql: |-
+    SELECT a.app_name, ROUND(AVG(t.dau), 0) AS avg_daily_dau FROM (
+      SELECT date, app_id, SUM(dau) AS dau FROM daily_app_metrics
+      WHERE date BETWEEN '2026-08-01' AND '2026-08-31' GROUP BY date, app_id) t
+    JOIN apps a USING (app_id) GROUP BY a.app_name ORDER BY avg_daily_dau DESC
+- q: 北美 6 月的每日平均 sessions
+  sql: |-
+    SELECT ROUND(AVG(t.s), 0) AS avg_daily_sessions FROM (
+      SELECT m.date, SUM(m.sessions) AS s FROM daily_app_metrics m
+      JOIN countries c ON m.country_code = c.country_code
+      WHERE c.region = '北美' AND m.date BETWEEN '2026-06-01' AND '2026-06-30' GROUP BY m.date) t
+- q: TikTok 廣告的 CPI 是多少？
+  sql: |-
+    SELECT ROUND(1.0 * SUM(d.spend_usd) / SUM(d.installs), 3) AS cpi_usd FROM campaign_daily d
+    JOIN ad_campaigns c USING (campaign_id) WHERE c.channel = 'TikTok'
+- q: 各 App 的轉換率（安裝 / 點擊）
+  sql: |-
+    SELECT a.app_name, ROUND(1.0 * SUM(d.installs) / SUM(d.clicks), 4) AS cvr FROM campaign_daily d
+    JOIN ad_campaigns c USING (campaign_id) JOIN apps a ON c.app_id = a.app_id
+    GROUP BY a.app_name ORDER BY cvr DESC

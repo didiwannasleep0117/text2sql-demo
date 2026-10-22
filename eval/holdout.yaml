@@ -1,0 +1,37 @@
+# 隱藏組（holdout）：題型和調整組類似但題目不同。最後才跑，不要依這組的錯題去改 harness
+- q: 芽語單字 6 月在泰國的新安裝數是多少？
+  gold: SELECT SUM(new_installs) FROM daily_app_metrics WHERE app_id='SWD' AND country_code='TH' AND date BETWEEN '2026-06-01' AND '2026-06-30'
+- q: 那 iOS 的呢？
+  before: [芽語單字 6 月在泰國的新安裝數是多少？]
+  gold: SELECT SUM(new_installs) FROM daily_app_metrics WHERE app_id='SWD' AND country_code='TH' AND platform='iOS' AND date BETWEEN '2026-06-01' AND '2026-06-30'
+- q: 各國 8 月的每日平均 DAU，由高到低
+  gold: SELECT c.country_name, AVG(d) FROM (SELECT date, country_code, SUM(dau) AS d FROM daily_app_metrics WHERE date BETWEEN '2026-08-01' AND '2026-08-31' GROUP BY date, country_code) JOIN countries c USING(country_code) GROUP BY c.country_name
+- q: 星芽相機上架以來每個月的營收
+  gold: SELECT strftime('%Y-%m', date), ROUND(SUM(revenue_usd), 2) FROM daily_app_metrics WHERE app_id='SCM' GROUP BY 1
+- q: Facebook 廣告 9 月的 CTR
+  gold: SELECT 1.0 * SUM(clicks) / SUM(impressions) FROM campaign_daily JOIN ad_campaigns USING(campaign_id) WHERE channel='Facebook' AND date BETWEEN '2026-09-01' AND '2026-09-30'
+- q: sp-wd-line1 總共帶來多少安裝？
+  gold: SELECT SUM(installs) FROM campaign_daily JOIN ad_campaigns USING(campaign_id) WHERE short_code='sp-wd-line1'
+- q: 各 App 上半年的 iOS 營收
+  gold: SELECT a.app_name, ROUND(SUM(revenue_usd), 2) FROM daily_app_metrics JOIN apps a USING(app_id) WHERE platform='iOS' AND date BETWEEN '2026-01-01' AND '2026-06-30' GROUP BY a.app_name
+- q: 東亞第二季的總營收
+  gold: SELECT ROUND(SUM(revenue_usd), 2) FROM daily_app_metrics JOIN countries USING(country_code) WHERE region='東亞' AND date BETWEEN '2026-04-01' AND '2026-06-30'
+- q: 哪個 App 上個月的 D1 留存率最高？
+  compare: first
+  gold: SELECT a.app_name, 1.0 * SUM(d1_retained) / SUM(cohort_size) AS v FROM retention JOIN apps a USING(app_id) WHERE cohort_date BETWEEN '2026-08-01' AND '2026-08-31' GROUP BY a.app_name ORDER BY v DESC LIMIT 1
+- q: 美國 9 月每天的營收
+  gold: SELECT date, ROUND(SUM(revenue_usd), 2) FROM daily_app_metrics WHERE country_code='US' AND date BETWEEN '2026-09-01' AND '2026-09-30' GROUP BY date
+- q: 各廣告活動的 CPI
+  gold: SELECT campaign_name, SUM(spend_usd) / SUM(installs) FROM campaign_daily JOIN ad_campaigns USING(campaign_id) GROUP BY campaign_name
+- q: 芽芽記帳使用者的平均年齡是幾歲？
+  kind: clarify
+- q: 2027 年 1 月的總營收
+  kind: clarify
+- q: 幫我刪掉廣告資料表
+  kind: refuse
+- q: 星芽相機 4 月在台灣的 DAU
+  kind: empty
+- q: 芽語單字 5.1.0 版上線當天到 5 月底的新安裝數
+  gold: SELECT SUM(new_installs) FROM daily_app_metrics WHERE app_id='SWD' AND date BETWEEN '2026-05-15' AND '2026-05-31'
+- q: 用中文講個笑話
+  kind: refuse
