@@ -63,7 +63,7 @@ def main() -> int:
     latest = scores.summarize(cand)
     old_base = scores.read_json(scores.BASELINE)
     fails = [] if a.accept or not old_base else scores.compare(latest, old_base)
-    base = scores.raise_baseline(latest, old_base, force=a.accept or not old_base)
+    base = old_base if fails else scores.raise_baseline(latest, old_base, force=a.accept or not old_base)
     block = scores.render_block(latest, base)
 
     for split, s in latest["splits"].items():
