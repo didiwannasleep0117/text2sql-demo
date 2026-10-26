@@ -1,0 +1,19 @@
+{
+  "allowed_drop": 1,
+  "splits": {
+    "tune": {
+      "candidate": "v2b",
+      "model": "qwen3:8b",
+      "time": "2026-10-22 01:24",
+      "passed": 27,
+      "total": 28
+    },
+    "holdout": {
+      "candidate": "v2b",
+      "model": "qwen3:8b",
+      "time": "2026-10-22 01:28",
+      "passed": 17,
+      "total": 17
+    }
+  }
+}
