@@ -4,7 +4,7 @@
 
 <!-- EVAL:START -->
 <!-- 這段由 scripts/run_eval.py 自動產生，請不要手動修改 -->
-**最新評測**：候選 `v2b`，模型 `qwen3:8b`（[怎麼看這些分數](#自動評測ci-檢查--本機跑模型)）
+**最新評測**：候選 `v2b`，模型 `qwen3:8b`（[怎麼看這些分數](docs/evaluation.md#分數怎麼看)）
 
 - 調整組 tune：**27/28**（96.4%），平均 3.5 秒／題，2026-10-22，CI 基準 ≥ 26
 - 隱藏組 holdout：**17/17**（100%），平均 3.3 秒／題，2026-10-22，CI 基準 ≥ 16
@@ -61,107 +61,6 @@ flowchart LR
 | 查詢太大拖垮資料庫 | 5 秒逾時中止、最多回傳 500 列 |
 | 圖表類型 | 程式判斷：第一欄是日期 → 折線圖；30 列以內的分類 → 長條圖；單一數字不畫 |
 
-## 評測：比對「執行結果」，不比對 SQL 字串
-
-同一個答案有很多種 SQL 寫法，所以評分是**把標準 SQL 和模型 SQL 都執行一次，比結果**（`eval/grade.py`）：
-
-- 列數要一樣；標準答案的每個數值欄，模型結果裡要有一欄數值相同（容許四捨五入，比率也接受 ×100 的百分比）
-- 名稱欄要對得上（代碼和名稱都算：'US' = 美國、短網址 = 活動名稱）；日期欄只看列數，不管格式
-- 「哪個最高」只比第一列；另外有應追問（clarify）、應拒答（refuse）、應回查無資料（empty）三種題型
-- 有追問題：`before:` 先問前一題，前一題的 SQL 當作對話紀錄
-
-`tests/test_offline.py`（不需要模型，15 題）測 SQL 安全檢查、日期對照、摘要數字檢查、整數相除改寫、圖表判斷。
-
-## 自動評測：CI 檢查 ＋ 本機跑模型
-
-模型跑在自己電腦上（Ollama），GitHub 的 CI 機器上沒有模型；為了 CI 去呼叫付費 API 也不划算，而且換了模型分數就不是同一個東西了。所以評測拆成兩半：**CI 只做不需要模型的檢查，真正跑模型的評測在本機做，分數跟著 commit 進來，再由 CI 把關。**
-
-### CI（GitHub Actions：`.github/workflows/eval-ci.yml`）
-
-push 到 master、對 master 開 PR 時自動跑（也可在 Actions 頁面手動觸發），不呼叫模型、不需要 API 金鑰：
-
-1. **單元測試** `uv run python -m pytest -q tests`
-   - `tests/test_grade.py`：評分程式本身對不對。SQL 寫法不同（欄位順序、別名、排序、用代碼代替名稱、比率寫成百分比）但結果一樣 → 算對；日期範圍錯、列數不同、數字錯 → 算錯；模型產生的 SQL 執行失敗（`error`）→ 算錯；追問／拒答／查無資料題型；題庫每一題的標準 SQL 都能執行
-   - `tests/test_regression.py`：回歸檢查和 README 分數區塊的邏輯
-   - `tests/test_offline.py`：SQL 安全檢查、日期對照等（見上面）
-   - `tests/test_mcp_client.py` 要有 MCP 伺服器，CI 上自動跳過
-2. **回歸檢查** `uv run python scripts/check_regression.py`
-   - 用**現在的**評分規則和題庫，重新評分已 commit 的結果（`harness/runs/<候選>__tune.json`、`__holdout.json`），分數要跟 `eval/latest.json` 一樣。改了 `eval/grade.py` 或題目、讓分數變了，一定會被抓到
-   - `eval/latest.json` 每一組答對的題數，不能低於基準 `eval/baseline.json`
-   - README 最上面的分數區塊要跟 `eval/latest.json` 一致（不會出現 README 寫的分數跟實際結果對不上）
-
-要注意：CI 不知道模型「現在」會怎麼回答。它檢查的是「commit 進來的分數有沒有退步、用現在的評分規則算不算得出來」。改了 prompt 或程式流程，要在本機重跑評測，CI 才會看到新分數。
-
-### 本機：一行指令跑完整評測
-
-```bash
-# 先開 Ollama（預設 http://127.0.0.1:11434，可用環境變數 OLLAMA_URL 改），並 ollama pull qwen3:8b
-uv run python scripts/run_eval.py                    # 評目前的候選（eval/latest.json 裡記的，現在是 v2b），調整組＋隱藏組都跑，約 3 分鐘
-uv run python scripts/run_eval.py --candidate v4     # 換候選（harness/candidates/v4）
-uv run python scripts/run_eval.py --from-existing    # 不跑模型：用 harness/runs/ 既有的結果重新評分（改了評分規則、或只想更新 README）
-uv run python scripts/run_eval.py --accept           # 題數改了、或確定接受分數下降：基準直接換成這次的結果
-```
-
-它會依序：
-
-1. 跑調整組和隱藏組（跟 `harness/loop.py probe` 一樣：結果存 `harness/runs/`、記進 `harness/scoreboard.csv`）
-2. 寫 `eval/latest.json`（候選、模型、每組分數、平均秒數、時間）
-3. 跟基準 `eval/baseline.json` 比：**沒退步就把基準往上調**（基準只升不降）；退步就不動基準，結束碼 1
-4. 改寫 README 最上面 `<!-- EVAL:START -->` ～ `<!-- EVAL:END -->` 之間的分數區塊（不要手動改這段）
-
-跑完把 `harness/runs/`、`harness/scoreboard.csv`、`eval/latest.json`、`eval/baseline.json`、`README.md` 一起 commit。如果分數退步又沒有 `--accept`，CI 會失敗，提醒你這次改動讓分數變差。
-
-### 分數怎麼看
-
-- **調整組 tune（28 題）**：改進時看得到錯題，有被「針對」過，分數偏樂觀
-- **隱藏組 holdout（17 題）**：不拿來調整，比較接近真實表現；錯題不給看（`loop.py fails` 會拒絕）
-- **答對**：`sql` 題是模型 SQL 的執行結果跟標準答案一致（規則見上一節）；追問、拒答、查無資料題是看模型的動作對不對
-- **平均秒數**：每題從問問題到回答完成的時間，跟電腦的 GPU 有關，只能在同一台電腦上比較
-- **CI 基準**：每組最少要答對幾題。同一題每次跑可能有 ±1 題的浮動，`eval/baseline.json` 的 `allowed_drop` 設定容許少幾題（目前設 1：少 1 題算正常浮動，少 2 題以上 CI 才會失敗）
-
-## 自動改進循環（仿 Harness²，`harness/`）
-
-跟 [policy-agent-demo](https://github.com/didiwannasleep0117/policy-agent-demo) 同一套做法：每個候選是一個資料夾（`sql_system.md`、`summary_system.md`、`fewshots.yaml`、`env.yaml` 開關、`PROPOSAL.md` 說明），`loop.py` 跑分、比較，結果和教訓寫進 `harness/EXPERIENCE.md`。只看調整組的錯題，隱藏組最後才跑。
-
-| 候選 | 改了什麼 | 調整組 28 題 |
-|---|---|---|
-| v0 | 第一版 | 19 |
-| v1a | Prompt：比率乘 1.0、沒提日期不加日期、JOIN 用同義欄位 | 23 |
-| v1b | 程式：活動名稱／版本上線日／「到 N 月底」對照、沒提日期明講查全期間、查無資料先自檢 | 23 |
-| v2a | 合併 v1a＋v1b，**程式改寫整數相除** | 27 |
-| **v2b** | v2a ＋ 換範例（示範地區 JOIN、比率乘 1.0；範例題不取自調整組） | **27** |
-| v3 | v2b ＋ prompt 補「每日平均只 GROUP BY date」 | 27（沒修好，淘汰） |
-
-v2b 已複製成預設設定（`prompts/`、程式預設開關）。
-
-**最有意思的發現**：「比率要乘 1.0」寫在 prompt 裡，8B 模型完全不理，因為它照抄範例和公式說明裡的 `SUM/SUM`。改成程式直接改寫 SQL，4 題一次修好。範例的影響力比規則文字大，所以 v2b 是換範例，不是加規則。
-
-```bash
-python harness/loop.py new v4 --from v2b          # 複製候選
-python harness/loop.py probe v4 --split tune      # 跑分
-python harness/loop.py fails v4                   # 看錯題（隱藏組不給看）
-python harness/loop.py diff v2b v4                # 哪些修好、哪些弄壞
-python harness/loop.py rescore v4 --split tune    # 評分規則修正後重評（不重跑模型）
-```
-
-## MCP 伺服器（`src/text2sql_demo/mcp_server.py`）
-
-讓外部 Agent（n8n、Claude、Hermes…）也能查數據。`uv run text2sql-mcp` → `http://127.0.0.1:8002/mcp`（Streamable HTTP）。
-
-| 工具 | 給誰用 | 說明 |
-|---|---|---|
-| `ask_metrics(question)` | 不想自己寫 SQL 的呼叫端 | 整條本地流程（對照 → 本機 8B 產生 SQL → 試跑修正 → 摘要數字檢查），回傳摘要＋SQL＋表格 |
-| `describe_schema()` | 自己寫 SQL 的外部模型 | 資料表、欄位意義、指標公式、資料期間 |
-| `resolve_entities(question)` | 同上 | 程式做的代碼／日期對照（跟本地流程用同一套），避免外部模型猜代碼 |
-| `run_sql(sql)` | 同上 | 唯讀、只准單一 SELECT、5 秒逾時、最多 500 列；只回原始表格，不做摘要 |
-| `calculate(expression)` | 所有呼叫端 | 安全計算機。成長率、差額、佔比交給它算，不要讓模型心算 |
-
-**分工的想法**：比較強的外部模型負責「理解問題、寫 SQL、寫摘要」，容易出錯的部分交給工具：代碼對照、執行防護、計算。
-
-⚠️ **資料敏感度**：低階工具的查詢結果會進到外部模型。示範用假資料沒問題；真實資料要先決定哪些表能給外部模型看（例如只開彙總表、不開明細和個資），敏感的問題走 `ask_metrics` 留在本機模型。
-
-`tests/test_mcp_client.py`：伺服器有啟動時，實際用 MCP client 測工具清單、低階查詢流程、寫入被擋、計算機（共 4 題，沒啟動就跳過）。
-
 ## 快速開始
 
 ```bash
@@ -176,22 +75,9 @@ uv run python scripts/run_eval.py                     # 本機完整評測，更
 uv run text2sql-mcp                                   # MCP 伺服器 http://127.0.0.1:8002/mcp
 ```
 
-## 目錄
+## 文件導覽
 
-```
-src/text2sql_demo/
-  linker.py     代碼／日期對照（程式）
-  schema.py     給模型看的資料表說明、指標公式、內建範例
-  agent.py      主流程：產生 SQL → 改寫 → 試跑／修正 → 摘要 → 數字檢查 → 圖表
-  db.py         唯讀連線、authorizer、逾時、列數上限
-  cli.py        命令列
-  mcp_server.py MCP 伺服器（ask_metrics、describe_schema、resolve_entities、run_sql、calculate）
-  calc.py       安全計算機
-prompts/        正式版 prompt 與範例（＝改進循環選出的 v2b）
-app/            Streamlit 介面
-eval/           tune.yaml（28 題）、holdout.yaml（17 題）、grade.py、scores.py、latest.json（最新分數）、baseline.json（CI 基準）
-harness/        loop.py、candidates/、runs/、scoreboard.csv、EXPERIENCE.md
-scripts/        make_fake_db.py、take_screenshots.py、run_eval.py（本機評測）、check_regression.py（CI 回歸檢查）
-tests/          單元測試（評分、回歸檢查、安全檢查…；MCP 測試沒開伺服器就跳過）
-.github/        workflows/eval-ci.yml（CI）
-```
+- [評測與 CI](docs/evaluation.md)：評分方式（比對執行結果）、CI 檢查什麼、本機怎麼跑評測、分數怎麼看
+- [自動改進循環](docs/harness.md)：每個候選改了什麼、分數變化、最有意思的發現
+- [MCP 伺服器](docs/mcp.md)：讓外部 Agent 查數據的工具、分工想法、資料敏感度
+- [目錄結構](docs/structure.md)：每個資料夾和主要檔案的用途

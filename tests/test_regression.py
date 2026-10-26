@@ -55,6 +55,7 @@ def test_baseline_only_goes_up():
 def test_readme_block_insert_and_replace():
     block = scores.render_block(latest(), BASE)
     assert "27/28" in block and "17/17" in block and "100%" in block and "96.4%" in block
+    assert "](docs/evaluation.md#分數怎麼看)" in block  # 分數說明在 docs/evaluation.md
     text = "# 標題\n\n> ⚠️ 示範專案\n\n![圖](x.png)\n\n說明：`<!-- EVAL:START -->` ～ `<!-- EVAL:END -->` 之間自動產生\n"
     assert scores.readme_block(text) is None  # 說明文字裡提到標記，不算區塊
     once = scores.replace_block(text, block)
