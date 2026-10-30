@@ -81,3 +81,7 @@ uv run text2sql-mcp                                   # MCP 伺服器 http://127
 - [自動改進循環](docs/harness.md)：每個候選改了什麼、分數變化、最有意思的發現
 - [MCP 伺服器](docs/mcp.md)：讓外部 Agent 查數據的工具、分工想法、資料敏感度
 - [目錄結構](docs/structure.md)：每個資料夾和主要檔案的用途
+
+## 授權
+
+[MIT](LICENSE)
