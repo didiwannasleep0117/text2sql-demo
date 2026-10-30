@@ -1,6 +1,6 @@
 # MCP 伺服器（`src/text2sql_demo/mcp_server.py`）
 
-[← 回到 README](../README.md)
+[← 回到 README](../README.zh-TW.md)
 
 讓外部 Agent（n8n、Claude、Hermes…）也能查數據。`uv run text2sql-mcp` → `http://127.0.0.1:8002/mcp`（Streamable HTTP）。
 

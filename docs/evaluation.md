@@ -1,6 +1,6 @@
 # 評測與 CI
 
-[← 回到 README](../README.md)
+[← 回到 README](../README.zh-TW.md)
 
 ## 評測：比對「執行結果」，不比對 SQL 字串
 
@@ -29,7 +29,7 @@ push 到 master、對 master 開 PR 時自動跑（也可在 Actions 頁面手�
 2. **回歸檢查** `uv run python scripts/check_regression.py`
    - 用**現在的**評分規則和題庫，重新評分已 commit 的結果（`harness/runs/<候選>__tune.json`、`__holdout.json`），分數要跟 `eval/latest.json` 一樣。改了 `eval/grade.py` 或題目、讓分數變了，一定會被抓到
    - `eval/latest.json` 每一組答對的題數，不能低於基準 `eval/baseline.json`
-   - README 最上面的分數區塊要跟 `eval/latest.json` 一致（不會出現 README 寫的分數跟實際結果對不上）
+   - 兩份 README（英文 `README.md`、中文 `README.zh-TW.md`）最上面的分數區塊都要跟 `eval/latest.json` 一致（不會出現 README 寫的分數跟實際結果對不上）
 
 要注意：CI 不知道模型「現在」會怎麼回答。它檢查的是「commit 進來的分數有沒有退步、用現在的評分規則算不算得出來」。改了 prompt 或程式流程，要在本機重跑評測，CI 才會看到新分數。
 
@@ -48,9 +48,9 @@ uv run python scripts/run_eval.py --accept           # 題數改了、或確定�
 1. 跑調整組和隱藏組（跟 `harness/loop.py probe` 一樣：結果存 `harness/runs/`、記進 `harness/scoreboard.csv`）
 2. 寫 `eval/latest.json`（候選、模型、每組分數、平均秒數、時間）
 3. 跟基準 `eval/baseline.json` 比：**沒退步就把基準往上調**（基準只升不降）；退步就不動基準，結束碼 1
-4. 改寫 README 最上面 `<!-- EVAL:START -->` ～ `<!-- EVAL:END -->` 之間的分數區塊（不要手動改這段）
+4. 改寫兩份 README 裡 `<!-- EVAL:START -->` ～ `<!-- EVAL:END -->` 之間的分數區塊（不要手動改這段）
 
-跑完把 `harness/runs/`、`harness/scoreboard.csv`、`eval/latest.json`、`eval/baseline.json`、`README.md` 一起 commit。如果分數退步又沒有 `--accept`，CI 會失敗，提醒你這次改動讓分數變差。
+跑完把 `harness/runs/`、`harness/scoreboard.csv`、`eval/latest.json`、`eval/baseline.json`、`README.md`、`README.zh-TW.md` 一起 commit。如果分數退步又沒有 `--accept`，CI 會失敗，提醒你這次改動讓分數變差。
 
 ### 分數怎麼看
 
