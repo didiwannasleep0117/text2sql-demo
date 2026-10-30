@@ -70,3 +70,11 @@ def test_committed_results_pass_regression_check():
     # 跟 CI 跑的是同一個檢查：commit 進來的 latest.json／baseline.json／README／harness/runs 要一致、沒有退步
     check_regression = importlib.import_module("check_regression")
     assert check_regression.check() == []
+
+
+def test_english_block():
+    # README.md 是英文版：分數一樣，用英文寫；模型名稱裡的中文註記也換成英文
+    en = scores.render_block(latest(), BASE, "en")
+    assert "27/28" in en and "17/17" in en and "Tuning set" in en and "Hidden set" in en
+    assert "調整組" not in en and en.startswith(scores.START) and en.endswith(scores.END)
+    assert scores._model_en("qwen3:8b（思考模式）") == "qwen3:8b (thinking mode)"
