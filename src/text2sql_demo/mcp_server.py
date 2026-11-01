@@ -17,6 +17,7 @@ import json
 import os
 
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 
 from . import db
 from .agent import ask
@@ -28,8 +29,15 @@ mcp = FastMCP(
     "sprout-metrics",
     instructions="星芽科技（虛構）App 營運數據。問數字先用 resolve_entities 取得代碼和日期，再用 run_sql 查；"
                  "任何計算或比較請用 calculate。不想自己寫 SQL 就用 ask_metrics。",
-    host=os.getenv("HOST", "0.0.0.0"),
+    # 預設只聽本機；Docker 裡的 n8n 透過 host.docker.internal 也連得到
+    host=os.getenv("HOST", "127.0.0.1"),
     port=int(os.getenv("PORT", "8002")),
+    # 只接受本機與 Docker 的 Host 標頭，擋 DNS rebinding（惡意網頁冒充 localhost 呼叫工具）
+    transport_security=TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=["127.0.0.1:*", "localhost:*", "host.docker.internal:*"],
+        allowed_origins=["http://127.0.0.1:*", "http://localhost:*", "http://host.docker.internal:*"],
+    ),
 )
 
 
