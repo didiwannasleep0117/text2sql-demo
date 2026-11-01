@@ -79,6 +79,7 @@ ollama pull qwen3:8b
 uv sync
 uv run python scripts/make_fake_db.py                 # builds data/sprout_metrics.db
 uv run text2sql-ask 上個月各 App 的總營收               # CLI ("total revenue per app last month")
+                                                      # "today" = last day of the fake data (2026-09-30), so "last month" is Aug 2026; override with TODAY=YYYY-MM-DD
 uv run streamlit run app/streamlit_app.py             # chat UI at http://localhost:8501
 uv run python -m pytest -q tests                      # tests (MCP tests need text2sql-mcp running)
 uv run python scripts/check_regression.py             # regression check, same as CI, no model needed
