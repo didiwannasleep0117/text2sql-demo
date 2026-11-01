@@ -1,6 +1,6 @@
 # 自動改進循環（仿 Harness²，`harness/`）
 
-[← 回到 README](../README.md)
+[← 回到 README](../README.zh-TW.md)
 
 跟 [policy-agent-demo](https://github.com/didiwannasleep0117/policy-agent-demo) 同一套做法：每個候選是一個資料夾（`sql_system.md`、`summary_system.md`、`fewshots.yaml`、`env.yaml` 開關、`PROPOSAL.md` 說明），`loop.py` 跑分、比較，結果和教訓寫進 `harness/EXPERIENCE.md`。只看調整組的錯題，隱藏組最後才跑。
 

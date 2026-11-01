@@ -1,6 +1,6 @@
 # 目錄結構
 
-[← 回到 README](../README.md)
+[← 回到 README](../README.zh-TW.md)
 
 ```
 src/text2sql_demo/
